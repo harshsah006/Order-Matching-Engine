@@ -5,9 +5,13 @@
 
 void OrderBook::addOrder(const Order& order) {
     if (order.type == OrderType::Buy) {
-        bids[order.price].push_back(order);
+        auto& list = bids[order.price];
+        list.push_back(order);
+        orderMap[order.orderId] = {true, order.price, std::prev(list.end())};
     } else {
-        asks[order.price].push_back(order);
+        auto& list = asks[order.price];
+        list.push_back(order);
+        orderMap[order.orderId] = {false, order.price, std::prev(list.end())};
     }
     
     // Attempt to match after every order
@@ -15,31 +19,24 @@ void OrderBook::addOrder(const Order& order) {
 }
 
 void OrderBook::cancelOrder(uint64_t orderId) {
-    // In a real system, you would maintain an unordered_map<uint64_t, std::list<Order>::iterator>
-    // for O(1) cancellations. For simplicity, we just iterate.
-    for (auto& [price, orderList] : bids) {
-        for (auto it = orderList.begin(); it != orderList.end(); ++it) {
-            if (it->orderId == orderId) {
-                orderList.erase(it);
-                if (orderList.empty()) {
-                    bids.erase(price);
-                }
-                return;
-            }
+    auto it = orderMap.find(orderId);
+    if (it == orderMap.end()) return;
+
+    OrderLocation loc = it->second;
+    if (loc.isBid) {
+        auto& list = bids[loc.price];
+        list.erase(loc.orderIt);
+        if (list.empty()) {
+            bids.erase(loc.price);
+        }
+    } else {
+        auto& list = asks[loc.price];
+        list.erase(loc.orderIt);
+        if (list.empty()) {
+            asks.erase(loc.price);
         }
     }
-    
-    for (auto& [price, orderList] : asks) {
-        for (auto it = orderList.begin(); it != orderList.end(); ++it) {
-            if (it->orderId == orderId) {
-                orderList.erase(it);
-                if (orderList.empty()) {
-                    asks.erase(price);
-                }
-                return;
-            }
-        }
-    }
+    orderMap.erase(it);
 }
 
 void OrderBook::match() {
@@ -64,12 +61,14 @@ void OrderBook::match() {
 
             // Remove fulfilled orders
             if (bidOrder.quantity == 0) {
+                orderMap.erase(bidOrder.orderId);
                 bestBid->second.pop_front();
                 if (bestBid->second.empty()) {
                     bids.erase(bestBid);
                 }
             }
             if (askOrder.quantity == 0) {
+                orderMap.erase(askOrder.orderId);
                 bestAsk->second.pop_front();
                 if (bestAsk->second.empty()) {
                     asks.erase(bestAsk);
