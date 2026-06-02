@@ -50,7 +50,7 @@ void OrderBook::match() {
             auto& askOrder = bestAsk->second.front();
 
             uint32_t tradeQuantity = std::min(bidOrder.quantity, askOrder.quantity);
-            double tradePrice = askOrder.price; // Usually, maker's price is used
+            uint32_t tradePrice = askOrder.price; // Usually, maker's price is used
 
             // Uncomment the below line for debugging small numbers of orders
             // std::cout << "TRADE: " << tradeQuantity << " @ $" << tradePrice 
@@ -87,14 +87,14 @@ void OrderBook::printBook() const {
     for (auto it = asks.rbegin(); it != asks.rend(); ++it) {
         uint32_t totalVolume = 0;
         for (const auto& order : it->second) totalVolume += order.quantity;
-        std::cout << "  $" << std::fixed << std::setprecision(2) << it->first << " | Vol: " << totalVolume << "\n";
+        std::cout << "  $" << std::fixed << std::setprecision(2) << (it->first / 100.0) << " | Vol: " << totalVolume << "\n";
     }
     
     std::cout << "BIDS:\n";
     for (const auto& [price, orderList] : bids) {
         uint32_t totalVolume = 0;
         for (const auto& order : orderList) totalVolume += order.quantity;
-        std::cout << "  $" << std::fixed << std::setprecision(2) << price << " | Vol: " << totalVolume << "\n";
+        std::cout << "  $" << std::fixed << std::setprecision(2) << (price / 100.0) << " | Vol: " << totalVolume << "\n";
     }
     std::cout << "------------------\n";
 }

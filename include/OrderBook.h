@@ -25,15 +25,15 @@ private:
 
     struct OrderLocation {
         bool isBid;
-        double price;
+        uint32_t price;
         std::pmr::list<Order>::iterator orderIt;
     };
 
     // Bids (Buy orders) - Highest price first
-    std::pmr::map<double, std::pmr::list<Order>, std::greater<double>> bids{&memPool};
+    std::pmr::map<uint32_t, std::pmr::list<Order>, std::greater<uint32_t>> bids{&memPool};
 
     // Asks (Sell orders) - Lowest price first
-    std::pmr::map<double, std::pmr::list<Order>, std::less<double>> asks{&memPool};
+    std::pmr::map<uint32_t, std::pmr::list<Order>, std::less<uint32_t>> asks{&memPool};
 
     std::pmr::unordered_map<uint64_t, OrderLocation> orderMap{&memPool};
 
