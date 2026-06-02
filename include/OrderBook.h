@@ -4,6 +4,7 @@
 #include <list>
 #include <mutex>
 #include <vector>
+#include <unordered_map>
 
 class OrderBook {
 public:
@@ -19,11 +20,19 @@ public:
     void printBook() const;
 
 private:
+    struct OrderLocation {
+        bool isBid;
+        double price;
+        std::list<Order>::iterator orderIt;
+    };
+
     // Bids (Buy orders) - Highest price first
     std::map<double, std::list<Order>, std::greater<double>> bids;
 
     // Asks (Sell orders) - Lowest price first
     std::map<double, std::list<Order>, std::less<double>> asks;
+
+    std::unordered_map<uint64_t, OrderLocation> orderMap;
 
     // Optional: Mutex for thread safety if accessed concurrently
     // std::mutex bookMutex;
