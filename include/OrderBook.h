@@ -5,6 +5,7 @@
 #include <mutex>
 #include <vector>
 #include <unordered_map>
+#include <memory_resource>
 
 class OrderBook {
 public:
@@ -20,19 +21,21 @@ public:
     void printBook() const;
 
 private:
+    std::pmr::unsynchronized_pool_resource memPool;
+
     struct OrderLocation {
         bool isBid;
         double price;
-        std::list<Order>::iterator orderIt;
+        std::pmr::list<Order>::iterator orderIt;
     };
 
     // Bids (Buy orders) - Highest price first
-    std::map<double, std::list<Order>, std::greater<double>> bids;
+    std::pmr::map<double, std::pmr::list<Order>, std::greater<double>> bids{&memPool};
 
     // Asks (Sell orders) - Lowest price first
-    std::map<double, std::list<Order>, std::less<double>> asks;
+    std::pmr::map<double, std::pmr::list<Order>, std::less<double>> asks{&memPool};
 
-    std::unordered_map<uint64_t, OrderLocation> orderMap;
+    std::pmr::unordered_map<uint64_t, OrderLocation> orderMap{&memPool};
 
     // Optional: Mutex for thread safety if accessed concurrently
     // std::mutex bookMutex;
